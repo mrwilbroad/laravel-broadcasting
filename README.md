@@ -126,7 +126,7 @@
       - this happen automatically and number of users from db is calculated by aggregate function from sql query 
       - Good , now you understand the scenario , feel free to Think big on any realtime situation 
     
-    <strong>Handle in this way</strong>
+    <strong>Handle in this way in Javascript file</strong>
     ```js
      useEffect(()=> {
         const NotificationChannel = WebSocketEcho.channel("notification");
@@ -138,4 +138,8 @@
         }
 
     }, []);
+
+
+    ## Thanks for reading 
+    ## regard mrwilbroad
 
