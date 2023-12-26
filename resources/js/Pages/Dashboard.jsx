@@ -10,17 +10,25 @@ export default function Dashboard({ auth }) {
     const { totaluser } = usePage().props;
     const [showAlert, SetShowAlert] = useState(false);
 
-
     // listen to any changes
-    useEffect(()=> {
+    useEffect(() => {
         const NotificationChannel = WebSocketEcho.channel("notification");
-        NotificationChannel.listen("DocumentEvent", (event)=> {
-            console.log(event);
-        })
-        return ()=> {
+        NotificationChannel.listen("DocumentEvent", (event) => {
+            router.visit("/dashboard", {
+                preserveScroll: true,
+                preserveState: true,
+                method: "get",
+                onSuccess: (e) => {
+                    console.log(e);
+                },
+                onFinish: () => {
+                    setMessage("Process complete");
+                },
+            });
+        });
+        return () => {
             NotificationChannel.stopListening("DocumentEvent");
-        }
-
+        };
     }, []);
 
     const HandleSub = (e) => {

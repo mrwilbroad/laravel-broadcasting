@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Events\DocumentEvent;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class BroadcastingController extends Controller
@@ -15,8 +16,11 @@ class BroadcastingController extends Controller
 
     public function home()
     {
+        $count = DB::transaction(function(){
+            return User::all()->count();
+        });
         return Inertia::render("Dashboard", [
-            "totaluser" => User::all()->count()
+            "totaluser" => $count
         ]);
     }
 

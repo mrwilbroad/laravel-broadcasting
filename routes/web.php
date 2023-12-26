@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Broadcasting\BroadcastingController;
+use App\Http\Controllers\Excel\ExcellController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,9 +27,17 @@ Route::get('/', function () {
     ]);
 });
 
-Route::controller(BroadcastingController::class)->group(function(){
-    Route::get("/dashboard","home")->name("dashboard");
-    Route::post("/dashboard","index");
+Route::controller(BroadcastingController::class)->group(function () {
+    Route::get("/dashboard", "home")->name("dashboard");
+    Route::post("/dashboard", "index");
+})->middleware(['auth', 'verified']);
+
+Route::prefix("exports")->group(function () {
+    Route::controller(ExcellController::class)->group(function () {
+        Route::get("/", "index");
+        Route::post("/", "Store");
+        Route::get("/exportdata","ExportToC");
+    });
 })->middleware(['auth', 'verified']);
 
 Route::middleware('auth')->group(function () {
@@ -37,4 +46,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

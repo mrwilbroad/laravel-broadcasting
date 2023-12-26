@@ -19,8 +19,6 @@ class DocumentListener implements ShouldQueue, ShouldHandleEventsAfterCommit
     use InteractsWithQueue;
 
 
-    
-    public $queue = "high";
     /**
      * Create the event listener.
      */
