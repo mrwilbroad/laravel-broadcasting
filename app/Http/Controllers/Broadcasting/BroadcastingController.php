@@ -30,4 +30,6 @@ class BroadcastingController extends Controller
         DocumentEvent::dispatch(10);
         return back()->with("success","is processing ...");
     }
+
+    
 }

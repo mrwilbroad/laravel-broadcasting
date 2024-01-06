@@ -19,7 +19,6 @@ class DocumentEvent implements ShouldQueue ,ShouldBroadcast, ShouldDispatchAfter
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
 
-
     
     public $queue = "high";
 

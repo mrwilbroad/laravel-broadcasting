@@ -18,3 +18,7 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('notification', function () {
     return true;
 });
+
+Broadcast::channel("JobImportAnalysis", function(){
+    return true;
+});

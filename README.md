@@ -140,7 +140,55 @@
     }, []);
     
     ```
-    
+
+## Job batching is Awesome !  
+```php
+public function Store(Request $request)
+    {
+        // $file = $request->file("filename");
+        // $filepath = $file->storeAs("temp",'users.csv');
+        //  dispatch(new ImportCsvFile($filepath));
+
+        // dispatch Batches of Jobs
+        $batch = Bus::batch([
+            new ImportCsvFileWithBaches(1, 5),
+            new ImportCsvFileWithBaches(6, 7),
+            new ImportCsvFileWithBaches(7, 9),
+            new ImportCsvFileWithBaches(9, 14),
+            new ImportCsvFileWithBaches(15, 16),
+        ])
+            ->then(function (Batch $batch) {
+                echo "JOB COMLETE :" . $batch->progress() . "\n\n";
+                // mrwilbroadmark123@gmail.com
+                JobAnalysisEvent::dispatch($batch->progress(),
+                $batch->totalJobs,
+                "success",
+                "Data successfull saved to database",
+                true
+            );
+                
+            })
+            ->catch(function (Batch $batch, Throwable $e) {
+                // First Job failure detected ...
+                JobAnalysisEvent::dispatch($batch->progress(),
+                $batch->totalJobs,
+                "danger",
+                "Something went wrong , some data not saved!",
+                true
+            );
+                
+            })
+            ->finally(function (Batch $batch) {
+                // The batch has finnished executing ...
+            })
+            ->onQueue("importcsv")
+            // ->name("ImportCsv")
+            ->dispatch();
+        // dd($batch);
+
+        return back();
+    }
+```
 ## Thanks for reading 
 ## regard mrwilbroad
 
