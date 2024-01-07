@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Table, Button, Spinner, ProgressBar } from "react-bootstrap";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useEffect } from "react";
 import { router, usePage } from "@inertiajs/react";
 import { WebSocketEcho } from "@/bootstrap";
 import AlertMessage from "@/Components/AlertMessage";
+import { UserColumns } from "@/Components/Table/Users/Columns";
+import DataTableComponent from "@/Components/Table/DataTableComponent";
 
 const index = () => {
     const initialD = {
@@ -16,32 +18,43 @@ const index = () => {
         message: "",
         show: {
             progress: false,
-            alert: false
+            alert: false,
         },
         type: "success",
         percentage: 0,
     });
 
     const HandleSubmit = (values, otherprops) => {
-        
         setExportProgress({
             ...exportProgress,
-            message: "Please wait while processing...", 
+            message: "Please wait while processing...",
             show: {
                 alert: true,
-                progress: true
+                progress: true,
             },
             percentage: 1,
-        })
+        });
 
         router.visit("/exports", {
             method: "post",
             data: values,
             preserveState: true,
+            onError: (er) => {
+                for (const e in er) {
+                    otherprops.setFieldError(e, er[e]);
+                }
+                setExportProgress({
+                    ...exportProgress,
+                    message: "Something went wrong ...",
+                    type: "danger",
+                    show: {
+                        alert: true,
+                        progress: false,
+                    },
+                });
+            },
             onFinish: () => {
-                console.log("FINIS")
                 otherprops.setSubmitting(false);
-                
             },
         });
     };
@@ -52,34 +65,36 @@ const index = () => {
 
     useEffect(() => {
         const SocketChannel = WebSocketEcho.channel("JobImportAnalysis");
-        SocketChannel.listen("JobAnalysisEvent", (event)=> {
+        SocketChannel.listen("JobAnalysisEvent", (event) => {
             setExportProgress({
                 ...exportProgress,
                 percentage: event.progress,
                 type: event.output.messageType,
                 message: event.output.message,
                 show: {
-                    progress: event.output.messageType === 'success',
-                    alert: true
-                }
-            })
-        })
+                    progress: event.output.messageType === "success",
+                    alert: true,
+                },
+            });
+        });
 
-        return ()=> {
+        return () => {
             SocketChannel.stopListening("JobAnalysisEvent");
-        }
-
+        };
     }, []);
 
     return (
         <div className="container mt-4 vstack gap-2">
             <h5>Excell export data</h5>
 
-            <AlertMessage type={exportProgress.type} show={exportProgress.show.alert}>
+            <AlertMessage
+                type={exportProgress.type}
+                show={exportProgress.show.alert}
+            >
                 <section>
                     <strong>{exportProgress.message}</strong>
                 </section>
-                </AlertMessage>
+            </AlertMessage>
 
             <section className="col-lg-4 col-md-7 col-sm-7">
                 {exportProgress.show.progress && (
@@ -123,6 +138,11 @@ const index = () => {
                                         );
                                     }}
                                 </Field>
+                                <ErrorMessage
+                                    name="filename"
+                                    component="small"
+                                    className="text-danger"
+                                />
                                 <section>
                                     <Button
                                         type="submit"
@@ -145,7 +165,9 @@ const index = () => {
                     }}
                 </Formik>
             </section>
-            <Table striped bordered responsive hover>
+
+            <DataTableComponent Data={userList} Columns={UserColumns} />
+            {/* <Table striped bordered responsive hover>
                 <caption className="caption-top">
                     <section className="hstack gap-3">
                         <button
@@ -186,7 +208,7 @@ const index = () => {
                             )
                     )}
                 </tbody>
-            </Table>
+            </Table> */}
         </div>
     );
 };

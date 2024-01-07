@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use Throwable;
+use App\Http\Requests\ImportCsvRequest;
+use Spatie\SimpleExcel\SimpleExcelReader;
+use App\Jobs\ImportLargeCsvFileWithBatch;
+
 
 class ExcellController extends Controller
 {
@@ -25,7 +29,7 @@ class ExcellController extends Controller
         ]);
     }
 
-    public function Store(Request $request)
+    public function Store_one(ImportCsvRequest $request)
     {
         // $file = $request->file("filename");
         // $filepath = $file->storeAs("temp",'users.csv');
@@ -40,25 +44,24 @@ class ExcellController extends Controller
             new ImportCsvFileWithBaches(15, 16),
         ])
             ->then(function (Batch $batch) {
-                echo "JOB COMLETE :" . $batch->progress() . "\n\n";
                 // mrwilbroadmark123@gmail.com
-                JobAnalysisEvent::dispatch($batch->progress(),
-                $batch->totalJobs,
-                "success",
-                "Data successfull saved to database",
-                true
-            );
-                
+                JobAnalysisEvent::dispatch(
+                    $batch->progress(),
+                    $batch->totalJobs,
+                    "success",
+                    "Data successfull saved to database",
+                    true
+                );
             })
             ->catch(function (Batch $batch, Throwable $e) {
                 // First Job failure detected ...
-                JobAnalysisEvent::dispatch($batch->progress(),
-                $batch->totalJobs,
-                "danger",
-                "Something went wrong , some data not saved!",
-                true
-            );
-                
+                JobAnalysisEvent::dispatch(
+                    $batch->progress(),
+                    $batch->totalJobs,
+                    "danger",
+                    "Something went wrong , some data not saved!",
+                    true
+                );
             })
             ->finally(function (Batch $batch) {
                 // The batch has finnished executing ...
@@ -71,6 +74,27 @@ class ExcellController extends Controller
         return back();
     }
 
+
+
+    public function Store(ImportCsvRequest $request)
+    {
+        try {
+            $file = $request->file('filename');
+            $filepath = $file->storeAs("temp", 'userfile.csv');
+            $fullpath = storage_path('app/' . $filepath);
+            $rows = SimpleExcelReader::create($fullpath)
+                ->getRows();
+            $userChunks = $rows->chunk(30);
+            foreach ($userChunks as $chunk) {
+                ImportLargeCsvFileWithBatch::dispatch($chunk->toArray())
+                      ->onQueue("importcsv");
+            }
+            return back();
+
+        } catch (\Throwable $th) {
+            dd($th);
+        }
+    }
 
     public function ExportToC()
     {

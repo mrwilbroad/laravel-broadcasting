@@ -22,6 +22,7 @@ class ImportCsvFile implements ShouldQueue, ShouldBeUnique
 
 
 
+    
     /**
      * Create a new job instance.
      */

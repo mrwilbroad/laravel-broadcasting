@@ -189,6 +189,27 @@ public function Store(Request $request)
         return back();
     }
 ```
+
+
+## Another best way to import Larage data in term of chunk from collection
+```php
+try {
+            $file = $request->file('filename');
+            $filepath = $file->storeAs("temp", 'userfile.csv');
+            $fullpath = storage_path('app/' . $filepath);
+            $rows = SimpleExcelReader::create($fullpath)
+                ->getRows();
+            $userChunks = $rows->chunk(30);
+            foreach ($userChunks as $chunk) {
+                ImportLargeCsvFileWithBatch::dispatch($chunk->toArray())
+                      ->onQueue("importcsv");
+            }
+            return back();
+
+        } catch (\Throwable $th) {
+            dd($th);
+        }
+```
 ## Thanks for reading 
 ## regard mrwilbroad
 
