@@ -114,11 +114,13 @@ class ExcellController extends Controller
                 ->dispatch();
 
             $userChunks = $rows->chunk(30);
+           $start = 1;
             foreach ($userChunks as $key => $chunk) {
+
                 $batches->add(
                     new ImportLargeCsvFileWithBatch(
                         $chunk->toArray(),
-                        $batches->totalJobs
+                        $start
                     ),
                 );
             }

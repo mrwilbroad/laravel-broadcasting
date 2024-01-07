@@ -69,13 +69,13 @@ class ImportLargeCsvFileWithBatch  implements ShouldQueue
                 User::create([
                     'name'  => $user['name'],
                     'email' => $user['email'],
-                    'password' => $user['password']
+                    'password' =>  $user['password']
                 ]);
                 JobAnalysisEvent::dispatch(
                     1,
                     2,
                     "success",
-                    "|Baches :" . $this->totalbaches . "\nUser [" . $user['name'] . "] is created successfull ...",
+                    "|Total baches :" . ($this->totalbaches + $key) . "\n\nUser [" . $user['name'] . "] is created successfull ...",
                     true
                 );
             }
