@@ -31,11 +31,7 @@ class ExcellController extends Controller
 
     public function Store_one(ImportCsvRequest $request)
     {
-        // $file = $request->file("filename");
-        // $filepath = $file->storeAs("temp",'users.csv');
-        //  dispatch(new ImportCsvFile($filepath));
 
-        // dispatch Batches of Jobs
         $batch = Bus::batch([
             new ImportCsvFileWithBaches(1, 5),
             new ImportCsvFileWithBaches(6, 7),
@@ -44,7 +40,7 @@ class ExcellController extends Controller
             new ImportCsvFileWithBaches(15, 16),
         ])
             ->then(function (Batch $batch) {
-                // mrwilbroadmark123@gmail.com
+                // 
                 JobAnalysisEvent::dispatch(
                     $batch->progress(),
                     $batch->totalJobs,
@@ -84,15 +80,57 @@ class ExcellController extends Controller
             $fullpath = storage_path('app/' . $filepath);
             $rows = SimpleExcelReader::create($fullpath)
                 ->getRows();
+
+            $batches = Bus::batch([])
+                ->onQueue('importcsv')
+                ->then(function (Batch $batch) {
+                    JobAnalysisEvent::dispatch(
+                        $batch->progress(),
+                        $batch->totalJobs,
+                        "success",
+                        "Process",
+                        
+                    );
+                })->catch(function (Batch $batch, Throwable $e) {
+                    // First Job failure detected ...
+                    JobAnalysisEvent::dispatch(
+                        $batch->progress(),
+                        $batch->totalJobs,
+                        "danger",
+                        "Something went wrong , some data not saved!",
+                        true
+                    );
+                })
+                ->finally(function (Batch $batch) {
+                    // The batch has finnished executing ...
+                    JobAnalysisEvent::dispatch(
+                        $batch->progress(),
+                        $batch->totalJobs,
+                        "success",
+                        "Process complete",
+                        true
+                    );
+                })
+                ->dispatch();
+
             $userChunks = $rows->chunk(30);
-            foreach ($userChunks as $chunk) {
-                ImportLargeCsvFileWithBatch::dispatch($chunk->toArray())
-                      ->onQueue("importcsv");
+            foreach ($userChunks as $key => $chunk) {
+                $batches->add(
+                    new ImportLargeCsvFileWithBatch(
+                        $chunk->toArray(),
+                        $batches->totalJobs
+                    ),
+                );
             }
             return back();
-
         } catch (\Throwable $th) {
-            dd($th);
+            JobAnalysisEvent::dispatch(
+                0,
+                0,
+                "danger",
+                "Internal server error",
+                true
+            );
         }
     }
 
@@ -102,6 +140,13 @@ class ExcellController extends Controller
         $writer = SimpleExcelWriter::streamDownload("users.xlsx");
         $writer->addRows($users);
         $writer->toBrowser();
+    }
+
+
+    public function Destroy()
+    {
+        User::where("email",'!=',"mrwilbroadmark123@gmail.com")->delete();
+        return back()->with("success","All Data deleted successfull");
     }
 
 

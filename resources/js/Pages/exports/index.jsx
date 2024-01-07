@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Table, Button, Spinner, ProgressBar } from "react-bootstrap";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useEffect } from "react";
-import { router, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { WebSocketEcho } from "@/bootstrap";
 import AlertMessage from "@/Components/AlertMessage";
 import { UserColumns } from "@/Components/Table/Users/Columns";
@@ -13,7 +13,9 @@ const index = () => {
         filename: "",
     };
 
-    const { userList, total_users } = usePage().props;
+    const { userList, total_users, flash } = usePage().props;
+    const { success } = flash;
+
     const [exportProgress, setExportProgress] = useState({
         message: "",
         show: {
@@ -109,61 +111,81 @@ const index = () => {
                     </section>
                 )}
 
-                <Formik initialValues={initialD} onSubmit={HandleSubmit}>
-                    {(formik) => {
-                        return (
-                            <Form
-                                datatype="multipart/form-data"
-                                className="vstack gap-3"
-                            >
-                                <Field
-                                    className="form-control"
-                                    type="file"
-                                    name="filename"
+                <section className="vstack gap-3">
+                    <Formik initialValues={initialD} onSubmit={HandleSubmit}>
+                        {(formik) => {
+                            return (
+                                <Form
+                                    datatype="multipart/form-data"
+                                    className="vstack gap-3"
                                 >
-                                    {({ form, field }) => {
-                                        const { setFieldValue } = form;
-                                        return (
-                                            <input
-                                                name="filename"
-                                                type="file"
-                                                onChange={(e) =>
-                                                    setFieldValue(
-                                                        e.target.name,
-                                                        e.target.files[0]
-                                                    )
-                                                }
-                                                className="form-control"
-                                            />
-                                        );
-                                    }}
-                                </Field>
-                                <ErrorMessage
-                                    name="filename"
-                                    component="small"
-                                    className="text-danger"
-                                />
-                                <section>
-                                    <Button
-                                        type="submit"
-                                        variant="success"
-                                        disabled={formik.isSubmitting}
+                                    <Field
+                                        className="form-control"
+                                        type="file"
+                                        name="filename"
                                     >
-                                        Upload file
-                                        {formik.isSubmitting && (
-                                            <Spinner
-                                                animation="border"
-                                                variant="light"
-                                                role="status"
-                                                size="sm"
-                                            />
-                                        )}
-                                    </Button>
-                                </section>
-                            </Form>
-                        );
-                    }}
-                </Formik>
+                                        {({ form, field }) => {
+                                            const { setFieldValue } = form;
+                                            return (
+                                                <input
+                                                    name="filename"
+                                                    type="file"
+                                                    onChange={(e) =>
+                                                        setFieldValue(
+                                                            e.target.name,
+                                                            e.target.files[0]
+                                                        )
+                                                    }
+                                                    className="form-control"
+                                                />
+                                            );
+                                        }}
+                                    </Field>
+                                    <ErrorMessage
+                                        name="filename"
+                                        component="small"
+                                        className="text-danger"
+                                    />
+                                    <section>
+                                        <Button
+                                            type="submit"
+                                            variant="success"
+                                            disabled={formik.isSubmitting}
+                                        >
+                                            Upload file
+                                            {formik.isSubmitting && (
+                                                <Spinner
+                                                    animation="border"
+                                                    variant="light"
+                                                    role="status"
+                                                    size="sm"
+                                                />
+                                            )}
+                                        </Button>
+                                    </section>
+                                </Form>
+                            );
+                        }}
+                    </Formik>
+                    <Link
+                        className=""
+                        preserveState
+                        preserveScroll
+                        href="/exports/delete-all"
+                    >
+                        <button className="btn btn-danger col-lg-10 ">
+                            Truncate Data
+                        </button>
+                    </Link>
+                </section>
+            </section>
+
+            <section>
+                {success && (
+                    <section>
+                        <strong className="text-success">{success}</strong>
+                    </section>
+                )}
             </section>
 
             <DataTableComponent Data={userList} Columns={UserColumns} />

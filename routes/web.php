@@ -37,6 +37,7 @@ Route::prefix("exports")->group(function () {
         Route::get("/", "index");
         Route::post("/", "Store");
         Route::get("/exportdata","ExportToC");
+        Route::get("/delete-all","Destroy");
     });
 })->middleware(['auth', 'verified']);
 

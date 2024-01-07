@@ -11,11 +11,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Throwable;
 use App\Events\JobAnalysisEvent;
+use Illuminate\Bus\Batchable;
 
 class ImportLargeCsvFileWithBatch  implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 
     /**
@@ -42,11 +42,20 @@ class ImportLargeCsvFileWithBatch  implements ShouldQueue
 
 
     /**
+     * Total baches
+     *
+     * @var [type]
+     */
+    public $totalbaches;
+
+
+    /**
      * Create a new job instance.
      */
-    public function __construct(array $userdata)
+    public function __construct(array $userdata, $totalbaches)
     {
         $this->userData = $userdata;
+        $this->totalbaches = $totalbaches;
     }
 
     /**
@@ -56,6 +65,7 @@ class ImportLargeCsvFileWithBatch  implements ShouldQueue
     {
         try {
             foreach ($this->userData as $key => $user) {
+
                 User::create([
                     'name'  => $user['name'],
                     'email' => $user['email'],
@@ -65,13 +75,12 @@ class ImportLargeCsvFileWithBatch  implements ShouldQueue
                     1,
                     2,
                     "success",
-                    "user " . $user['name'] . " is created successfull ...",
+                    "|Baches :" . $this->totalbaches . "\nUser [" . $user['name'] . "] is created successfull ...",
                     true
                 );
             }
         } catch (\Throwable $th) {
-
-            report($th);
+            $this->failed($th);
         }
     }
 
